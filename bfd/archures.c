@@ -559,6 +559,8 @@ DESCRIPTION
 .  bfd_arch_loongarch,       {* LoongArch *}
 .#define bfd_mach_loongarch32	1
 .#define bfd_mach_loongarch64	2
+.  bfd_arch_clever,          {* Clever-ISA *}
+.#define bfd_mach_clever1_0   0
 .  bfd_arch_last
 .  };
 */
@@ -618,6 +620,7 @@ extern const bfd_arch_info_type bfd_arc_arch;
 extern const bfd_arch_info_type bfd_arm_arch;
 extern const bfd_arch_info_type bfd_avr_arch;
 extern const bfd_arch_info_type bfd_bfin_arch;
+extern const bfd_arch_info_type bfd_clever_arch;
 extern const bfd_arch_info_type bfd_cr16_arch;
 extern const bfd_arch_info_type bfd_cris_arch;
 extern const bfd_arch_info_type bfd_crx_arch;
@@ -708,6 +711,7 @@ static const bfd_arch_info_type * const bfd_archures_list[] =
     &bfd_arm_arch,
     &bfd_avr_arch,
     &bfd_bfin_arch,
+    &bfd_clever_arch,
     &bfd_cr16_arch,
     &bfd_cris_arch,
     &bfd_crx_arch,

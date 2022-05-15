@@ -453,6 +453,9 @@
    architecture was derived.  */
 #define EM_CSKY_OLD		EM_MCORE
 
+/* Temporary Constant for Clever-ISA. Will be replaced with official value when one is obtained */
+#define EM_CLEVER     0x434C /* Clever-ISA */
+
 /* See the above comment before you add a new EM_* value here.  */
 
 /* Values for e_version.  */

@@ -3460,6 +3460,11 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
   "BFD_RELOC_LARCH_SUB24",
   "BFD_RELOC_LARCH_SUB32",
   "BFD_RELOC_LARCH_SUB64",
+  "BFD_RELOC_CLEVER_GOT64_NONREL",
+  "BFD_RELOC_CLEVER_PLT64_NONREL",
+  "BFD_RELOC_CLEVER_GOT64",
+  "BFD_RELOC_CLEVER_DYNENT",
+  "BFD_RELOC_CLEVER_12",
  "@@overflow: BFD_RELOC_UNUSED@@",
 };
 #endif

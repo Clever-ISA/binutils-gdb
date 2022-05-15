@@ -1933,6 +1933,8 @@ enum bfd_architecture
   bfd_arch_loongarch,       /* LoongArch */
 #define bfd_mach_loongarch32   1
 #define bfd_mach_loongarch64   2
+  bfd_arch_clever,          /* Clever-ISA */
+#define bfd_mach_clever1_0   0
   bfd_arch_last
   };
 
@@ -6310,6 +6312,13 @@ assembler and not (currently) written to any object files.  */
   BFD_RELOC_LARCH_SUB24,
   BFD_RELOC_LARCH_SUB32,
   BFD_RELOC_LARCH_SUB64,
+
+/* Clever-ISA relocations  */
+  BFD_RELOC_CLEVER_GOT64_NONREL,
+  BFD_RELOC_CLEVER_PLT64_NONREL,
+  BFD_RELOC_CLEVER_GOT64,
+  BFD_RELOC_CLEVER_DYNENT,
+  BFD_RELOC_CLEVER_12,
   BFD_RELOC_UNUSED };
 
 typedef enum bfd_reloc_code_real bfd_reloc_code_real_type;

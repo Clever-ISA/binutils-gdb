@@ -2,7 +2,10 @@
 # Configuration validation subroutine script.
 #   Copyright 1992-2021 Free Software Foundation, Inc.
 
-timestamp='2021-04-30'
+
+# shellcheck disable=SC2006,SC2268 # see below for rationale
+
+timestamp='2021-08-29'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -50,7 +53,14 @@ timestamp='2021-04-30'
 #	CPU_TYPE-MANUFACTURER-KERNEL-OPERATING_SYSTEM
 # It is wrong to echo any other type of specification.
 
-me=$(echo "$0" | sed -e 's,.*/,,')
+# The "shellcheck disable" line above the timestamp inhibits complaints
+# about features and limitations of the classic Bourne shell that were
+# superseded or lifted in POSIX.  However, this script identifies a wide
+# variety of pre-POSIX systems that do not have POSIX shells at all, and
+# even some reasonably current systems (Solaris 10 as case-in-point) still
+# have a pre-POSIX /bin/sh.
+
+me=`echo "$0" | sed -e 's,.*/,,'`
 
 usage="\
 Usage: $0 [OPTION] CPU-MFR-OPSYS or ALIAS
@@ -112,9 +122,11 @@ esac
 
 # Split fields of configuration type
 # shellcheck disable=SC2162
+saved_IFS=$IFS
 IFS="-" read field1 field2 field3 field4 <<EOF
 $1
 EOF
+IFS=$saved_IFS
 
 # Separate into logical components for further validation
 case $1 in
@@ -134,7 +146,9 @@ case $1 in
 			nto-qnx* | linux-* | uclinux-uclibc* \
 			| uclinux-gnu* | kfreebsd*-gnu* | knetbsd*-gnu* | netbsd*-gnu* \
 			| netbsd*-eabi* | kopensolaris*-gnu* | cloudabi*-eabi* \
-			| storm-chaos* | os2-emx* | rtmk-nova*)
+			| storm-chaos* | os2-emx* | rtmk-nova* \
+			| phantom-kernel* | phantom-user* \
+			| snes*-elf* | snes*-xo65* | nes*-xo65* | snes*-coff*)
 				basic_machine=$field1
 				basic_os=$maybe_os
 				;;
@@ -163,6 +177,10 @@ case $1 in
 						basic_machine=$field1
 						basic_os=$field2
 						;;
+					zephyr*)
+						basic_machine=$field1-unknown
+						basic_os=$field2
+						;;
 					# Manufacturers
 					dec* | mips* | sequent* | encore* | pc533* | sgi* | sony* \
 					| att* | 7300* | 3300* | delta* | motorola* | sun[234]* \
@@ -172,7 +190,7 @@ case $1 in
 					| ultra | tti* | harris | dolphin | highlevel | gould \
 					| cbm | ns | masscomp | apple | axis | knuth | cray \
 					| microblaze* | sim | cisco \
-					| oki | wec | wrs | winbond)
+					| oki | wec | wrs | winbond )
 						basic_machine=$field1-$field2
 						basic_os=
 						;;
@@ -508,6 +526,10 @@ case $1 in
 				basic_machine=i386-sequent
 				basic_os=
 				;;
+			snesdev)
+				basic_machine=wc65c816-snes
+				basic_os=elf
+				;;
 			sps7)
 				basic_machine=m68k-bull
 				basic_os=sysv2
@@ -769,22 +791,22 @@ case $basic_machine in
 		vendor=hp
 		;;
 	i*86v32)
-		cpu=$(echo "$1" | sed -e 's/86.*/86/')
+		cpu=`echo "$1" | sed -e 's/86.*/86/'`
 		vendor=pc
 		basic_os=sysv32
 		;;
 	i*86v4*)
-		cpu=$(echo "$1" | sed -e 's/86.*/86/')
+		cpu=`echo "$1" | sed -e 's/86.*/86/'`
 		vendor=pc
 		basic_os=sysv4
 		;;
 	i*86v)
-		cpu=$(echo "$1" | sed -e 's/86.*/86/')
+		cpu=`echo "$1" | sed -e 's/86.*/86/'`
 		vendor=pc
 		basic_os=sysv
 		;;
 	i*86sol2)
-		cpu=$(echo "$1" | sed -e 's/86.*/86/')
+		cpu=`echo "$1" | sed -e 's/86.*/86/'`
 		vendor=pc
 		basic_os=solaris2
 		;;
@@ -898,7 +920,7 @@ case $basic_machine in
 		cpu=f301
 		vendor=fujitsu
 		;;
-	w65)
+	w65 | 65816 | 65c816 | wdc65c816 | wc65c816 | wdc65816 | wc65816)
 		cpu=w65
 		vendor=wdc
 		;;
@@ -917,14 +939,23 @@ case $basic_machine in
 		;;
 	leon-*|leon[3-9]-*)
 		cpu=sparc
-		vendor=$(echo "$basic_machine" | sed 's/-.*//')
+		vendor=`echo "$basic_machine" | sed 's/-.*//'`
 		;;
-
+	clever*-* )
+		cpu=clever
+		vendor=$(echo "$basic_machine" | sed 's/.*-//') 
+		;;
+	clever* )
+		cpu=clever
+		vendor=unknown
+		;;
 	*-*)
 		# shellcheck disable=SC2162
+		saved_IFS=$IFS
 		IFS="-" read cpu vendor <<EOF
 $basic_machine
 EOF
+		IFS=$saved_IFS
 		;;
 	# We use `pc' rather than `unknown'
 	# because (1) that's what they normally are, and
@@ -1008,7 +1039,6 @@ case $cpu-$vendor in
 		vendor=bull
 		basic_os=${basic_os:-bosx}
 		;;
-
 	# Here we normalize CPU types irrespective of the vendor
 	amd64-*)
 		cpu=x86_64
@@ -1084,7 +1114,7 @@ case $cpu-$vendor in
 		cpu=mipsisa64sb1el
 		;;
 	sh5e[lb]-*)
-		cpu=$(echo "$cpu" | sed 's/^\(sh.\)e\(.\)$/\1\2e/')
+		cpu=`echo "$cpu" | sed 's/^\(sh.\)e\(.\)$/\1\2e/'`
 		;;
 	spur-*)
 		cpu=spur
@@ -1102,12 +1132,11 @@ case $cpu-$vendor in
 		cpu=x86_64
 		;;
 	xscale-* | xscalee[bl]-*)
-		cpu=$(echo "$cpu" | sed 's/^xscale/arm/')
+		cpu=`echo "$cpu" | sed 's/^xscale/arm/'`
 		;;
 	arm64-*)
 		cpu=aarch64
 		;;
-
 	# Recognize the canonical CPU Types that limit and/or modify the
 	# company names they are paired with.
 	cr16-*)
@@ -1151,7 +1180,10 @@ case $cpu-$vendor in
 	tile*-*)
 		basic_os=${basic_os:-linux-gnu}
 		;;
-
+		
+    65c816-* | wdc65c816-* | wc65c816-* | wdc65816-* | wc65816-* | 65816-*)
+       cpu=w65
+        ;;
 	*)
 		# Recognize the canonical CPU types that are allowed with any
 		# company name.
@@ -1165,7 +1197,7 @@ case $cpu-$vendor in
 			| alphapca5[67] | alpha64pca5[67] \
 			| am33_2.0 \
 			| amdgcn \
-			| arc | arceb | arc64 \
+			| arc | arceb | arc32 | arc64 \
 			| arm | arm[lb]e | arme[lb] | armv* \
 			| avr | avr32 \
 			| asmjs \
@@ -1244,6 +1276,7 @@ case $cpu-$vendor in
 			| sparc | sparc64 | sparc64b | sparc64v | sparc86x | sparclet \
 			| sparclite \
 			| sparcv8 | sparcv9 | sparcv9b | sparcv9v | sv1 | sx* \
+			| spc700 \
 			| spu \
 			| tahoe \
 			| thumbv7* \
@@ -1253,13 +1286,14 @@ case $cpu-$vendor in
 			| v70 | v850 | v850e | v850e1 | v850es | v850e2 | v850e2v3 \
 			| vax \
 			| visium \
-			| w65 \
+			| w65 | 65816 | 65c816 | w65c816 | wdc65c816 | wdc65816 \
 			| wasm32 | wasm64 \
 			| we32k \
 			| x86 | x86_64 | xc16x | xgate | xps100 \
 			| xstormy16 | xtensa* \
 			| ymp \
-			| z8k | z80)
+			| z8k | z80 \
+			| clever )
 				;;
 
 			*)
@@ -1292,30 +1326,40 @@ then
 case $basic_os in
 	gnu/linux*)
 		kernel=linux
-		os=$(echo $basic_os | sed -e 's|gnu/linux|gnu|')
+		os=`echo "$basic_os" | sed -e 's|gnu/linux|gnu|'`
 		;;
 	os2-emx)
 		kernel=os2
-		os=$(echo $basic_os | sed -e 's|os2-emx|emx|')
+		os=`echo "$basic_os" | sed -e 's|os2-emx|emx|'`
 		;;
 	nto-qnx*)
 		kernel=nto
-		os=$(echo $basic_os | sed -e 's|nto-qnx|qnx|')
+		os=`echo "$basic_os" | sed -e 's|nto-qnx|qnx|'`
 		;;
 	*-*)
 		# shellcheck disable=SC2162
+		saved_IFS=$IFS
 		IFS="-" read kernel os <<EOF
 $basic_os
 EOF
+		IFS=$saved_IFS
 		;;
 	# Default OS when just kernel was specified
 	nto*)
 		kernel=nto
-		os=$(echo $basic_os | sed -e 's|nto|qnx|')
+		os=`echo "$basic_os" | sed -e 's|nto|qnx|'`
 		;;
 	linux*)
 		kernel=linux
-		os=$(echo $basic_os | sed -e 's|linux|gnu|')
+		os=`echo "$basic_os" | sed -e 's|linux|gnu|'`
+		;;
+	phantom*)
+		kernel=phantom
+		os=$(echo $basic_os | sed -e 's|phantom|user|')
+		;;
+	snes*)
+		kernel=$basic_os
+		os=elf
 		;;
 	*)
 		kernel=
@@ -1336,7 +1380,7 @@ case $os in
 		os=cnk
 		;;
 	solaris1 | solaris1.*)
-		os=$(echo $os | sed -e 's|solaris1|sunos4|')
+		os=`echo "$os" | sed -e 's|solaris1|sunos4|'`
 		;;
 	solaris)
 		os=solaris2
@@ -1365,7 +1409,7 @@ case $os in
 		os=sco3.2v4
 		;;
 	sco3.2.[4-9]*)
-		os=$(echo $os | sed -e 's/sco3.2./sco3.2v/')
+		os=`echo "$os" | sed -e 's/sco3.2./sco3.2v/'`
 		;;
 	sco*v* | scout)
 		# Don't match below
@@ -1395,7 +1439,7 @@ case $os in
 		os=lynxos
 		;;
 	mac[0-9]*)
-		os=$(echo "$os" | sed -e 's|mac|macos|')
+		os=`echo "$os" | sed -e 's|mac|macos|'`
 		;;
 	opened*)
 		os=openedition
@@ -1404,10 +1448,10 @@ case $os in
 		os=os400
 		;;
 	sunos5*)
-		os=$(echo "$os" | sed -e 's|sunos5|solaris2|')
+		os=`echo "$os" | sed -e 's|sunos5|solaris2|'`
 		;;
 	sunos6*)
-		os=$(echo "$os" | sed -e 's|sunos6|solaris3|')
+		os=`echo "$os" | sed -e 's|sunos6|solaris3|'`
 		;;
 	wince*)
 		os=wince
@@ -1441,7 +1485,7 @@ case $os in
 		;;
 	# Preserve the version number of sinix5.
 	sinix5.*)
-		os=$(echo $os | sed -e 's|sinix|sysv|')
+		os=`echo "$os" | sed -e 's|sinix|sysv|'`
 		;;
 	sinix*)
 		os=sysv4
@@ -1688,7 +1732,7 @@ fi
 # Now, validate our (potentially fixed-up) OS.
 case $os in
 	# Sometimes we do "kernel-libc", so those need to count as OSes.
-	musl* | newlib* | uclibc*)
+	musl* | newlib* | relibc* | uclibc*)
 		;;
 	# Likewise for "kernel-abi"
 	eabi* | gnueabi*)
@@ -1729,7 +1773,8 @@ case $os in
 	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
 	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
-	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx*)
+	     | nsk* | powerunix* | genode* | zvmoe* | qnx* | emx* \
+		 | user* | kernel* | zephyr*  | xo65*)
 		;;
 	# This one is extra strict with allowed versions
 	sco3.2v2 | sco3.2v[4-9]* | sco5v6*)
@@ -1746,11 +1791,12 @@ esac
 # As a final step for OS-related things, validate the OS-kernel combination
 # (given a valid OS), if there is a kernel.
 case $kernel-$os in
-	linux-gnu* | linux-dietlibc* | linux-android* | linux-newlib* | linux-musl* | linux-uclibc* )
+	linux-gnu* | linux-dietlibc* | linux-android* | linux-newlib* \
+		   | linux-musl* | linux-relibc* | linux-uclibc* )
 		;;
 	uclinux-uclibc* )
 		;;
-	-dietlibc* | -newlib* | -musl* | -uclibc* )
+	-dietlibc* | -newlib* | -musl* | -relibc* | -uclibc* )
 		# These are just libc implementations, not actual OSes, and thus
 		# require a kernel.
 		echo "Invalid configuration \`$1': libc \`$os' needs explicit kernel." 1>&2
@@ -1764,6 +1810,10 @@ case $kernel-$os in
 		;;
 	os2-emx)
 		;;
+	phantom-kernel* | phantom-user*)
+		;;
+	snes*-elf* | snes*-xo65* | nes*-xo65* | snes*-coff* )
+		;; 
 	*-eabi* | *-gnueabi*)
 		;;
 	-*)
