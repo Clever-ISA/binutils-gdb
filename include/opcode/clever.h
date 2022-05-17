@@ -66,11 +66,6 @@ typedef enum{
     v14h,
     v15l,
     v15h,
-
-    reserved255 = 255,
-} clever_reg;
-
-typedef enum {
     cr0 = 128,
     cr1,
     cr2, 
@@ -95,7 +90,10 @@ typedef enum {
     msr4,
     msr5,
     msr6,
-} clever_sreg;
+    randinfo = 156,
+    reserved255 = 255,
+} clever_reg;
+
 
 #define CLEVER_OPC(full_op) ((full_op)>>4)
 #define CLEVER_OP_H(full_op) ((full_op)&0xf)
@@ -166,6 +164,6 @@ enum clever_condition{
 
 #define CLEVER_BRANCH_UNCONDITIONAL_SIZE(opcode) ((CLEVER_OP_H(opcode)&0x3)+1)
 
-
+#define CLEVER_MAX_OPERANDS 3
 
 #endif 
