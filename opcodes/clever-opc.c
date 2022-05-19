@@ -40,11 +40,11 @@ static clever_reg no_indirect_branch(uint16_t s __attribute_maybe_unused__){
 }
 
 static char* print_ijmp_target(uint16_t s, char* p){
-    if(CLEVER_OPCODE_H(s)==14){
+    if(CLEVER_OP_H(s)==14){
         p-=4;
         strcpy(p,"fret");
         return p+4;
-    }else if(CLEVER_OPCODE_H(s)==15){
+    }else if(CLEVER_OP_H(s)==15){
         p-=4;
         strcpy(p,"ifjmp");
         return p+5;
@@ -54,7 +54,7 @@ static char* print_ijmp_target(uint16_t s, char* p){
 }
 
 static char* print_vfield(uint16_t s, char* p){
-    if(CLEVER_OPCODE_H(s)==1){
+    if(CLEVER_OP_H(s)==1){
         strcpy(p,".v");
         return p+2;
     }else{
@@ -91,7 +91,7 @@ static size_t add_int(uint16_t s, clever_operand* ops, size_t curr_size){
     ops[curr_size].short_imm.rel = false;
     ops[curr_size].short_imm.imm.size = 0;
     ops[curr_size].short_imm.imm.symbol = NULL;
-    ops[curr_size].short_imm.imm.value = 0;
+    ops[curr_size].short_imm.imm.value = CLEVER_OP_H(s);
     return curr_size+1;
 }
 
@@ -115,11 +115,12 @@ const struct clever_instruction_info branch_retrsm= {0x7cb, 0x000, 0,           
 const struct clever_instruction_info branch_scret  = {0xfc6, 0x000, 0,  XMain, "scret", validate_allow_none, noop_print_h, add_none,add_none, validate_any_ops};
 const struct clever_instruction_info branch_iret   = {0xfc7, 0x000, 0,  XMain, "iret" , validate_allow_none, noop_print_h, add_none,add_none, validate_any_ops};
 
+const struct clever_instruction_info branch_hcall  = {0xfcb, 0x000, 0, XVirtualization, "hcall"  , validate_allow_none, noop_print_h, add_none, add_none, validate_any_ops};
 const struct clever_instruction_info branch_hret   = {0xfd6, 0x000, 0, XVirtualization, "hret"   , validate_allow_none, noop_print_h, add_none,add_none, validate_any_ops};
 const struct clever_instruction_info branch_hresume= {0xfd7, 0x000, 0, XVirtualization, "hresume", validate_allow_none, noop_print_h, add_none,add_none, validate_any_ops};
 
 
-const struct clever_branch_info clever_ubranches[last_user_branch] = {
+const struct clever_branch_info clever_ubranches[user_branch_count] = {
     {extract_unconditional_branch_size, no_indirect_branch, true, &branch_jmp},
     {extract_unconditional_branch_size, no_indirect_branch, true, &branch_call},
     {extract_unconditional_branch_size, no_indirect_branch, true, &branch_fcall},
@@ -134,10 +135,11 @@ const struct clever_branch_info clever_ubranches[last_user_branch] = {
     {no_addr_operand, no_indirect_branch, false, &branch_retrsm}
 };
 
-const struct clever_branch_info clever_sbranches[(last_supervisor_branch-first_super_branch)+(last_hyper_branch-hypervisor_branches)] = {
+const struct clever_branch_info clever_sbranches[SBRANCHES_SIZE] = {
     {no_addr_operand, no_indirect_branch, false, &branch_scret},
     {no_addr_operand, no_indirect_branch, false, &branch_iret},
 
+    {no_addr_operand, no_indirect_branch, false, &branch_hcall},
     /* hypervisor branches */
     {no_addr_operand, no_indirect_branch, false, &branch_hret},
     {no_addr_operand, no_indirect_branch, false, &branch_hresume}
@@ -172,7 +174,7 @@ static const char* const ccsuffix[] = {
 
 static char* add_jump_suffix(uint16_t opc, char* op){
     strcpy(op,ccsuffix[CLEVER_OPC(opc)&0xf]);
-    op += strlen(ccsuffix[CLEVER_OPC(opc)&0xf])
+    op += strlen(ccsuffix[CLEVER_OPC(opc)&0xf]);
     
     int8_t val = CLEVER_OP_H(opc);
 
@@ -263,8 +265,8 @@ const struct clever_instruction_info clever_insns[] = {
     {0x004, 0x400, 2, XMain, "or" ,  validate_arith_mem_h, add_arith_lf_h, add_none, add_none, validate_arith_insn},
     {0x005, 0x400, 2, XMain, "xor",  validate_arith_mem_h, add_arith_lf_h, add_none, add_none, validate_arith_insn},
 
-    {0x006, 0x000, 0, XMain, "mul",  validate_mul_insn, add_mul_ssf, add_none, add_none}, 
-    {0x007, 0x000, 0, XMain, "div",  validate_allow_any, add_div_sswf, add_none, add_none},
+    {0x006, 0x000, 0, XMain, "mul",  validate_mul_insn, add_mul_ssf, add_none, add_none, validate_any_ops}, 
+    {0x007, 0x000, 0, XMain, "div",  validate_allow_any, add_div_sswf, add_none, add_none, validate_any_ops},
 
     {0x008, 0x400, 2, XMain, "mov",  validate_allow_none, noop_print_h, add_none, add_none, validate_mov},
     {0x009, 0x000, 2, XMain, "lea",  validate_allow_none, noop_print_h, add_none, add_none, validate_lea},

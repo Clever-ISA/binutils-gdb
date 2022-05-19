@@ -203,8 +203,8 @@ elf_clever_info_to_howto (bfd *abfd, arelent *cache_ptr,
 // };
 
 
-#define TARGET_LITTLE_SYM		    x86_64_elf64_vec
-#define TARGET_LITTLE_NAME		    "elf64-x86-64"
+#define TARGET_LITTLE_SYM		    clever_elf64_vec
+#define TARGET_LITTLE_NAME		    "elf64-clever"
 #define ELF_ARCH			    bfd_arch_clever
 #define ELF_TARGET_ID			    GENERIC_ELF_DATA
 #define ELF_MACHINE_CODE		    EM_CLEVER

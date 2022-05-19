@@ -8,7 +8,7 @@
 const struct clever_instruction_info invalid_instruction = {0, 0, 0, XMain, "**INVALID INSTRUCTION**", NULL, NULL, NULL, NULL, NULL};
 
 
-union clever_extensions enabled_extensions = {.x_main = 1, .x_float = 1, .x_vec = 1, .x_float_ext = 1, .x_rand = 1, .x_virtualization = 1};
+union clever_extensions enabled_extensions = CLEVER_ALL_EXTENSIONS;
 
 static const struct clever_branch_info* decode_branch_insn(uint16_t op,union clever_extensions* ext){
     if(CLEVER_BRANCH_IS_CONDITIONAL(op))
@@ -16,11 +16,13 @@ static const struct clever_branch_info* decode_branch_insn(uint16_t op,union cle
     else if(CLEVER_IS_SUPER_BRANCH(op)){
         ptrdiff_t off;
         if(CLEVER_BRANCH_IS_RELATIVE(op)){
-            off = CLEVER_BRANCH_UNCONDITIONAL_OP(op)-first_hyper_branch+(last_supervisor_branch-first_super_branch);
+            off = CLEVER_BRANCH_UNCONDITIONAL_OP(op)-first_hyper_branch+(BASIC_SUPER_BRANCH_COUNT+VIRT_SUPER_BRANCH_COUNT);
         }else{
             off = CLEVER_BRANCH_UNCONDITIONAL_OP(op);
-            if(off>(last_supervisor_branch-first_super_branch))
+            if(off>(last_super_branch-first_super_branch))
                 return NULL;
+            else if(off>(last_basic_super_branch-first_super_branch))
+                off -= next_super_branch;
         }
         if(CLEVER_HAS_EXTENSION(ext,clever_sbranches[off].insn->clever_extension)) // This check could probably be lifted into the BRANCH_IS_RELATIVE check, but this is future-proof
             return &clever_sbranches[off];

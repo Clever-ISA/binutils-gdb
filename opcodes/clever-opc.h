@@ -5,13 +5,14 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C"{
 #endif
 
 // Extensions in Clever-ISA
-enum CleverExtension{
+enum clever_extension{
     XMain, // All CPUs support X-main by definition
     XFloat,
     XVec,
@@ -44,6 +45,14 @@ union clever_extensions{
 
 #define CLEVER_HAS_EXTENSION(exts, xno) ((((exts)->flags)[(xno)/(sizeof (unsigned int)*CHAR_BIT)])&(0<<((xno)%(sizeof (unsigned int)*CHAR_BIT))))
 
+#define CLEVER_ALL_EXTENSIONS {.x_main = 1, .x_float = 1, .x_vec = 1, .x_float_ext = 1, .x_rand = 1, .x_virtualization = 1}
+
+// X-rand and X-virtualization are not part of the prepared 1.0 spec
+#define CLEVER1_0_ALL_EXTENSIONS {.x_main = 1, .x_float = 1, .x_vec = 1, .x_float_ext = 1}
+
+// X-main is mandatory, but other bits are unset.
+#define CLEVER_NO_EXTENSIONS {.x_main = 1}
+
 enum{
     branch_addr = 16,
     prefix,
@@ -63,18 +72,29 @@ enum clever_unconditional_branches{
     callsm,
     retrsm,
     last_user_branch = retrsm,
+    user_branch_count,
     // supervisor branches
     first_super_branch = 32,
     scret = 32,
     reti,
+    last_basic_super_branch = reti,
 
+    next_super_branch = first_super_branch+11,
     hcall = first_super_branch+11,
-    last_supervisor_branch = hcall,
-    first_hyper_branch = first_super_branch+16,
-    hret = first_hyper_branch+6,
-    hresume = first_hyper_branch+7,
+    last_super_branch = hcall,
+    hyper_branches = first_super_branch+16,
+    first_hyper_branch = hyper_branches+6,
+    hret = hyper_branches+6,
+    hresume = hyper_branches+7,
     last_hyper_branch = hresume,
 };
+
+#define BASIC_SUPER_BRANCH_COUNT ((last_basic_super_branch+1)-first_super_branch)
+#define VIRT_SUPER_BRANCH_COUNT ((last_super_branch+1)-next_super_branch)
+#define SUPER_BRANCH_COUNT (BASIC_SUPER_BRANCH_COUNT+VIRT_SUPER_BRANCH_COUNT)
+#define HYPER_BRANCH_COUNT ((last_hyper_branch+1)-first_hyper_branch)
+#define SBRANCHES_SIZE (BASIC_SUPER_BRANCH_COUNT+VIRT_SUPER_BRANCH_COUNT+HYPER_BRANCH_COUNT)
+
 
 /// Given the entire opcode, obtains the unconditional branch operand
 /// Returns 0 if no such 

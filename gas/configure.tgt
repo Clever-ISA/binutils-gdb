@@ -55,6 +55,7 @@ case ${cpu} in
   arm*)			cpu_type=arm endian=little ;;
   bfin*)		cpu_type=bfin endian=little ;;
   c4x*)			cpu_type=tic4x ;;
+  clever*)  cpu_type=clever ;;
   cr16*)		cpu_type=cr16 endian=little ;;
   crisv32)		cpu_type=cris arch=crisv32 ;;
   crx*)			cpu_type=crx endian=little ;;
@@ -171,7 +172,7 @@ case ${generic_target} in
   bfin-*-linux-uclibc)			fmt=fdpicelf em=linux ;;
   bfin-*-uclinux*)			fmt=elf em=linux ;;
   bfin-*elf)				fmt=elf ;;
-
+  clever-*-elf)     fmt=elf ;;
   cr16-*-elf*)				fmt=elf ;;
 
   cris-*-linux-* | crisv32-*-linux-*)
