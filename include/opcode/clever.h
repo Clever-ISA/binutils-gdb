@@ -108,6 +108,7 @@ enum clever_operand_kind{
     indirect = 1,
     short_imm    = 2,
     long_imm     = 3,
+    size_only    = 4,
 };
 
 enum clever_condition{
@@ -287,12 +288,16 @@ typedef union clever_operand{
     struct{ enum clever_operand_kind kind; uint16_t size; uint8_t scale; clever_reg base; uint8_t index_kind_and_val;} indirect;
     struct{ enum clever_operand_kind kind; bool rel; clever_immediate imm;} short_imm;
     struct{ enum clever_operand_kind kind; bool rel; bool mem; clever_immediate imm; uint16_t mem_size;} long_imm;
+    struct {enum clever_operand_kind kind; uint16_t size;} size_only;
 } clever_operand;
 
+struct clever_instruction;
 
 typedef size_t clever_insert_operands(uint16_t, clever_operand*, size_t);
 
 typedef bool clever_validate_operands(uint16_t, clever_operand*);
+
+typedef const char* clever_parse_control_suffix(uint16_t*, const char*, const struct clever_instruction* insn);
 
 struct clever_instruction_info{
     uint16_t opcode;
@@ -302,6 +307,7 @@ struct clever_instruction_info{
     const char* mnemonic;
     clever_validate_control_field* validate_h;
     clever_write_control_suffix* print_h;
+    clever_parse_control_suffix* parse_h;
     clever_insert_operands* pre_insert_operands;
     clever_insert_operands* post_insert_operands;
     clever_validate_operands* validate_operands;

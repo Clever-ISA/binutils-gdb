@@ -28,3 +28,4 @@ const char EXP_CHARS[] = "eE";
 
 /* Chars that mean this number is a floating point constant as in 0f12.456  */
 const char FLT_CHARS[] = "f";
+
