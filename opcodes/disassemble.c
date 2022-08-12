@@ -29,6 +29,7 @@
 #define ARCH_alpha
 #define ARCH_bpf
 #define ARCH_cris
+#define ARCH_clever
 #define ARCH_ia64
 #define ARCH_loongarch
 #define ARCH_mips
@@ -170,6 +171,11 @@ disassembler (enum bfd_architecture a,
     case bfd_arch_bfin:
       disassemble = print_insn_bfin;
       break;
+#endif
+#ifdef ARCH_clever
+  case bfd_arch_clever:
+    disassemble = print_insn_clever;
+    break;
 #endif
 #ifdef ARCH_cr16
     case bfd_arch_cr16:

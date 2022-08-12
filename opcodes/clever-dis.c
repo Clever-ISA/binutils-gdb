@@ -5,13 +5,15 @@
 #include "clever-opc.h"
 #include <stddef.h>
 
-const struct clever_instruction_info invalid_instruction = {0, 0, 0, XMain, "**INVALID INSTRUCTION**", NULL, NULL, NULL, NULL, NULL};
+const struct clever_instruction_info invalid_instruction = {0, 0, 0, XMain, "**INVALID INSTRUCTION**", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 
 
 union clever_extensions enabled_extensions = CLEVER_ALL_EXTENSIONS;
 
 static const struct clever_branch_info* decode_branch_insn(uint16_t op,union clever_extensions* ext){
-    if(CLEVER_BRANCH_IS_CONDITIONAL(op))
+    if(!CLEVER_IS_BRANCH(op))
+        return NULL;
+    else if(CLEVER_BRANCH_IS_CONDITIONAL(op))
         return &clever_cond_branch_info;
     else if(CLEVER_IS_SUPER_BRANCH(op)){
         ptrdiff_t off;
@@ -388,6 +390,12 @@ static int print_operand(const clever_operand* op, disassemble_info* info){
             total+=res;
         }
         break;
+    case size_only:
+        res = print_size(op->size_only.size,info);
+        if(res<0)
+            return res;
+        total += res;
+        break;
     }
     return total;
 }
@@ -410,7 +418,8 @@ static int print_insn(const struct clever_instruction* insn, disassemble_info* i
 
     strcpy(op_buff,insn->insn->mnemonic);
     p = op_buff+strlen(insn->insn->mnemonic);
-    insn->insn->print_h(insn->opc,p);
+    if(insn->insn->print_h)
+        insn->insn->print_h(insn->opc,p);
     res = (info->fprintf_func)(info->stream,"%s ",op_buff);
     if(res<0)
         return res;
@@ -436,7 +445,7 @@ print_insn_clever (bfd_vma memaddr, struct disassemble_info *info);
 int
 print_insn_clever (bfd_vma memaddr, struct disassemble_info *info)
 {
-    struct clever_instruction insn;
+    struct clever_instruction insn = {0};
     long res = decode_instruction(info,&insn,memaddr);
     long tbytes = res;
     print_insn(&insn,info);
