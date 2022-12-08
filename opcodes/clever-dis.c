@@ -355,7 +355,7 @@ static int print_operand(const clever_operand* op, disassemble_info* info){
         if(res<0)
             return res;
         total+=res;
-        if(&op->short_imm.rel){
+        if(op->short_imm.rel){
             res = (info->fprintf_func)(info->stream,"+ip");
             if(res<0)
                 return res;
@@ -377,7 +377,7 @@ static int print_operand(const clever_operand* op, disassemble_info* info){
         if(res<0)
             return res;
         total+=res;
-        if(&op->short_imm.rel){
+        if(op->short_imm.rel){
             res = (info->fprintf_func)(info->stream,"+ip");
             if(res<0)
                 return res;
